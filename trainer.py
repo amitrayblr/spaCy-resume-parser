@@ -16,7 +16,7 @@ TRAIN_DATA = [
   ('university of massachussets is the best university for engineering', {'entities': [(0, 27, 'UNIVERSITY')]}),
   ('university of oslo is a good university', {'entities': [(0, 18, 'UNIVERSITY')]}),
   ('i want to study at university of british colombia', {'entities': [(19, 49, 'UNIVERSITY')]}),
-  ('delhi public school is a terrible school', {'entities': [(0, 19, 'SCHOOL')]}),
+  ('delhi public school is a school', {'entities': [(0, 19, 'SCHOOL')]}),
   ('ebenzer international is an international school', {'entities': [(0, 21, 'SCHOOL')]}),
   ('bethany public school is where i started my schooling', {'entities': [(0, 21, 'SCHOOL')]}),
   ('cambride university is a top uk university', {'entities': [(0, 19, 'UNIVERSITY')]}),

@@ -1,37 +1,29 @@
 {"label": "DEGREE", "pattern": "ms"}
-{"label": "DEGREE", "pattern": "m s"}
+{"label": "DEGREE", "pattern": "bs"}
+{"label": "DEGREE", "pattern": "msc"}
+{"label": "DEGREE", "pattern": "bsc"}
+{"label": "DEGREE", "pattern": "me"}
+{"label": "DEGREE", "pattern": "BE"}
+{"label": "DEGREE", "pattern": "msc"}
+{"label": "DEGREE", "pattern": "bsc"}
+{"label": "DEGREE", "pattern": "ssc"}
+{"label": "DEGREE", "pattern": "hsc"}
+{"label": "DEGREE", "pattern": "x"}
+{"label": "DEGREE", "pattern": "xii"}
+{"label": "DEGREE", "pattern": "cbse"}
+{"label": "DEGREE", "pattern": "icse"}
+{"label": "DEGREE", "pattern": "mtech"}
+{"label": "DEGREE", "pattern": "btech"}
+{"label": "DEGREE", "pattern": "bba"}
+{"label": "DEGREE", "pattern": "mba"}
+{"label": "DEGREE", "pattern": "bcom"}
+{"label": "DEGREE", "pattern": "mcom"}
+{"label": "DEGREE", "pattern": "mca"}
+{"label": "DEGREE", "pattern": "bca"}
+{"label": "DEGREE", "pattern": "ca"}
+{"label": "DEGREE", "pattern": "undergrad"}
+{"label": "DEGREE", "pattern": "undergraduate"}
+{"label": "DEGREE", "pattern": "postgrad"}
+{"label": "DEGREE", "pattern": "postgraduate"}
+{"label": "DEGREE", "pattern": "doctorate"}
 
-
-
-
-
-
-
-
-
-
-{"label": "QUALI", "pattern": "MS"}
-{"label": "QUALI", "pattern": "BS"}
-{"label": "QUALI", "pattern": "BE"}
-{"label": "QUALI", "pattern": "BSc"}
-{"label": "QUALI", "pattern": "ME"}
-{"label": "QUALI", "pattern": "MSc"}
-{"label": "QUALI", "pattern": "BTech"}
-{"label": "QUALI", "pattern": "MTech"}
-{"label": "QUALI", "pattern": "SSC"}
-{"label": "QUALI", "pattern": "HSC"}
-{"label": "QUALI", "pattern": "CBSE"}
-{"label": "QUALI", "pattern": "ICSE"}
-{"label": "QUALI", "pattern": "X"}
-{"label": "QUALI", "pattern": "XII"}
-{"label": "QUALI", "pattern": "MBA"}
-{"label": "QUALI", "pattern": "BBA"}
-{"label": "QUALI", "pattern": "BCA"}
-{"label": "QUALI", "pattern": "MCA"}
-{"label": "QUALI", "pattern": "BCom"}
-{"label": "QUALI", "pattern": "CA"}
-{"label": "QUALI", "pattern": "BEd"}
-{"label": "QUALI", "pattern": "MEd"}
-{"label": "QUALI", "pattern": "BPharma"}
-{"label": "QUALI", "pattern": "MPharma"}
-{"label": "QUALI", "pattern": "MFA"}

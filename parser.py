@@ -22,19 +22,7 @@ ner = spacy.load('custom-ner')
 
 matcher = Matcher(nlp.vocab)
 
-degrees = [
-  'BE','B.E.', 'B.E', 'BS', 'B.S', 
-  'ME', 'M.E', 'M.E.', 'MS', 'M.S', 
-  'BTECH', 'B.TECH', 'M.TECH', 'MTECH', 
-  'SSC', 'HSC', 'C.B.S.E.', 'I.C.S.E.', 
-  'CBSE', 'ICSE', 'X', 'XII', 'Undergraduate',
-  'Postgraduate', 'Doctorate', 'UG', 'U.G.', 
-  'P.G.', 'PG', 
-]
-
-ruler = EntityRuler(nlp)
-patterns = [{"label": "QUALI", "pattern": i} for i in degrees]
-ruler.add_patterns(patterns)
+ruler = EntityRuler(nlp).from_disk("./patterns.jsonl")
 nlp.add_pipe(ruler)
 
 def textExtract(filename, pages=None):
@@ -58,24 +46,20 @@ def textExtract(filename, pages=None):
   return text
 
 def nameExtract(text):
-  clean = re.sub('[^A-Za-z0-9]+', ' ', text)
-  nlp_text = nlp(clean)
-  for ent in nlp_text.ents:
+  for ent in nlp(text).ents:
     if(ent.label_ == 'PERSON'):
       return ent.text
     else:
       pattern = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
       matcher.add('NAME', [pattern])
-      matches = matcher(nlp_text)
+      matches = matcher(nlp(text))
       for match_id, start, end in matches:
-        span = nlp_text[start:end]
+        span = nlp(text)[start:end]
         return span.text
 
 def numberExtract(text):
-  clean = re.sub('[^A-Za-z0-9]+', ' ', text)
-  phone = re.findall(re.compile(r'(?:(?:\+?([1-9]|[0-9][0-9]|[0-9][0-9][0-9])\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([0-9][1-9]|[0-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{5})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?'), clean)
+  phone = re.findall(re.compile(r'(?:(?:\+?([1-9]|[0-9][0-9]|[0-9][0-9][0-9])\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([0-9][1-9]|[0-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{5})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?'), text)
   if phone:
-    print(phone)
     number = ''.join(phone[0])
     if len(number) > 10:
       return '+' + number
@@ -84,9 +68,10 @@ def numberExtract(text):
 
 def linkExtract(text):
   urls = []
-  url = re.findall(r'(https?://\S+)', text)
-  for ele in url:
-    urls.append(ele)
+  links = re.findall(r'(https?://\S+)', text)
+  for ele in links:
+    if ele not in urls:
+      urls.append(ele)
   email = re.findall(r'([a-zA-Z0-9+._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)', text)
   if email:
     try:
@@ -99,8 +84,7 @@ def linkExtract(text):
     return ('Could not extract any links')
 
 def skillsExtract(text, skills_file='skills.csv'):
-  nlp_text = nlp(text)
-  tokens = [token.text for token in nlp_text]
+  tokens = [token.text for token in nlp(text)]
   data = pd.read_csv(skills_file)
   skills = list(data.columns.values)
   skillset = []
@@ -109,7 +93,7 @@ def skillsExtract(text, skills_file='skills.csv'):
     if token.lower() in skills:
       skillset.append(token)
 
-  for chunk in nlp_text.noun_chunks:
+  for chunk in nlp(text).noun_chunks:
     chunk = chunk.text.lower().strip()
     if chunk in skills:
       skillset.append(chunk)
@@ -118,9 +102,7 @@ def skillsExtract(text, skills_file='skills.csv'):
 
 def educationExtract(text):
   education = []
-  clean = re.sub('[^A-Za-z0-9]+', ' ', text)
-  ner_text = ner(clean)
-  for ent in ner_text.ents:
+  for ent in ner(text).ents:
     if (ent.label_ == 'UNIVERSITY'):
       education.append(ent.text)
     if (ent.label_ == 'SCHOOL'):
@@ -130,31 +112,31 @@ def educationExtract(text):
 
 def qualificationExtract(text):
   qualifications = []
-  clean = re.sub('[^A-Za-z0-9.]+', ' ', text)
-  nlp_text = nlp(clean)
-  for ent in nlp_text.ents:
-    if (ent.label_ == 'QUALI' and ent.text not in qualifications):
-      # print(ent.text)
+  low = text.lower()
+  for ent in nlp(low).ents:
+    if (ent.label_ == 'DEGREE'):
       qualifications.append(ent.text)
+  for ent in nlp(text).ents:
+    if (ent.label_ == 'DEGREE'):
+      qualifications.append(ent.text)    
   if (len(qualifications) > 0):
     return qualifications
   else: 
     return ('Could not extract qualifications')  
 
-def openFile(dir):
+def parseResume(dir):
   entries = os.listdir(dir)
   for entry in entries:
     text = textExtract(os.path.join(dir, entry))
     text = " ".join(text.split())
-    
-    print('Name is:', nameExtract(text))
+    clean = re.sub('[^A-Za-z0-9 ]+', '', text)
+
+    print('Name is:', nameExtract(clean))
     print('Numbers found', numberExtract(text))
     print('Links found:', linkExtract(text))
-    print('Qualifications found:', qualificationExtract(text))
+    print('Qualifications found:', qualificationExtract(clean))
     # print('Education is:', educationExtract(text))
-    print('Skills found:', skillsExtract(text))
+    print('Skills found:', skillsExtract(clean))
     print('-----------------------------------------------')
 
-openFile('resumes')
-
-# layoutExtract(path)
+parseResume('resumes')

@@ -2,6 +2,7 @@ import spacy
 import pandas as pd
 import re
 import os
+import json
 
 from io import StringIO
 
@@ -10,9 +11,7 @@ from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
-
 from pdfminer.high_level import extract_pages
-from pdfminer.layout import LTTextContainer, LTChar
 
 from spacy.matcher import Matcher
 from spacy.pipeline import EntityRuler
@@ -66,18 +65,19 @@ def numberExtract(text):
     else:
       return number
 
+def emailExtract(text):
+  email = re.findall(r'([a-zA-Z0-9+._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)', text)
+  if email:
+    return email
+  else: 
+    return None
+
 def linkExtract(text):
   urls = []
   links = re.findall(r'(https?://\S+)', text)
   for ele in links:
     if ele not in urls:
       urls.append(ele)
-  email = re.findall(r'([a-zA-Z0-9+._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)', text)
-  if email:
-    try:
-      urls.append(email[0].split()[0].strip(';'))
-    except IndexError:
-      urls.append('Could not extract email')
   if (len(urls) != 0):
     return urls
   else:
@@ -131,12 +131,46 @@ def parseResume(dir):
     text = " ".join(text.split())
     clean = re.sub('[^A-Za-z0-9 ]+', '', text)
 
-    print('Name is:', nameExtract(clean))
-    print('Numbers found', numberExtract(text))
-    print('Links found:', linkExtract(text))
-    print('Qualifications found:', qualificationExtract(clean))
-    # print('Education is:', educationExtract(text))
-    print('Skills found:', skillsExtract(clean))
+    name = nameExtract(clean)
+    number = numberExtract(text)
+    email = emailExtract(text)
+    # links = linkExtract(text)
+    # quali = qualificationExtract(clean)
+    skill = skillsExtract(clean)
+
+    # print('Name is:', nameExtract(clean))
+    # print('Numbers found', numberExtract(text))
+    # print('Links found:', linkExtract(text))
+    # print('Qualifications found:', qualificationExtract(clean))
+    # # print('Education is:', educationExtract(text))
+    # print('Skills found:', skillsExtract(clean))
+
+    resumeDict = {
+      'basics': {
+      },
+      'skills': []
+    }
+
+    if (name != None):
+      resumeDict['basics']['name'] = name
+    else:
+      resumeDict['basics']['name'] = None
+
+    if (number != None):
+      resumeDict['basics']['mobile'] = number
+    else:
+      resumeDict['basics']['mobile'] = None
+
+    if (email != None):
+      resumeDict['basics']['email'] = email
+    else:
+      resumeDict['basics']['email'] = None
+
+    if (len(skill) > 0):
+      for i in skill:
+        resumeDict['skills'].append({'name': i})
+
+    print(json.dumps(resumeDict, indent=4))
     print('-----------------------------------------------')
 
 parseResume('resumes')

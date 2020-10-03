@@ -3,15 +3,16 @@ import pandas as pd
 import re
 import os
 import json
+import textract
 
 from io import StringIO
 
 from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
-from pdfminer.layout import LAParams
+from pdfminer.converter import PDFPageAggregator
+from pdfminer.layout import LAParams, LTTextBox
 from pdfminer.pdfpage import PDFPage
-from pdfminer.high_level import extract_pages
 
 from spacy.matcher import Matcher
 from spacy.pipeline import EntityRuler
@@ -24,7 +25,7 @@ matcher = Matcher(nlp.vocab)
 ruler = EntityRuler(nlp).from_disk("./patterns.jsonl")
 nlp.add_pipe(ruler)
 
-def textExtract(filename, pages=None):
+def pdfExtract(filename, pages=None):
   if not pages:
       pagenumber = set()
   else:
@@ -44,20 +45,25 @@ def textExtract(filename, pages=None):
   output.close
   return text
 
-def nameExtract(text):
-  for ent in nlp(text).ents:
-    if(ent.label_ == 'PERSON'):
-      return ent.text
-    else:
-      pattern = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
-      matcher.add('NAME', [pattern])
-      matches = matcher(nlp(text))
-      for match_id, start, end in matches:
-        span = nlp(text)[start:end]
-        return span.text
+def docExtract(filename):
+  text = textract.process(filename)
+  text = str(text, 'utf-8')
+  return text
+
+def nameExtract(text):  
+  pattern = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
+  matcher.add('NAME', [pattern])
+  matches = matcher(text)
+  # print(matches)
+  for match_id, start, end in matches:
+    span = text[start:end]
+    if 'name' not in span.text.lower():
+      # print(span.text)
+      return span.text
+
 
 def numberExtract(text):
-  phone = re.findall(re.compile(r'(?:(?:\+?([1-9]|[0-9][0-9]|[0-9][0-9][0-9])\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([0-9][1-9]|[0-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)?([0-9]{5})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?'), text)
+  phone = re.findall(re.compile(r'(?:(?:\+?([1-9]|[0-9][0-9]|[0-9][0-9][0-9])\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([0-9][1-9]|[0-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s*(?:[.-]\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2,3})\s*(?:[.-]\s*)?([0-9]{4,5})(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?'), text)
   if phone:
     number = ''.join(phone[0])
     if len(number) > 10:
@@ -127,11 +133,17 @@ def qualificationExtract(text):
 def parseResume(dir):
   entries = os.listdir(dir)
   for entry in entries:
-    text = textExtract(os.path.join(dir, entry))
-    text = " ".join(text.split())
-    clean = re.sub('[^A-Za-z0-9 ]+', '', text)
+    ext = os.path.splitext(entry)[-1].lower()
+    if (ext == '.pdf'):
+      text = pdfExtract(os.path.join(dir, entry))
+      text = " ".join(text.split())
+      clean = re.sub('[^A-Za-z0-9 ]+', '', text)
+    else:
+      text = docExtract(os.path.join(dir, entry))
+      text = " ".join(text.split())
+      clean = re.sub('[^A-Za-z0-9 ]+', '', text)
 
-    name = nameExtract(clean)
+    name = nameExtract(nlp(text))
     number = numberExtract(text)
     email = emailExtract(text)
     # links = linkExtract(text)
@@ -166,11 +178,11 @@ def parseResume(dir):
     else:
       resumeDict['basics']['email'] = None
 
-    if (len(skill) > 0):
-      for i in skill:
-        resumeDict['skills'].append({'name': i})
-
-    print(json.dumps(resumeDict, indent=4))
+    # if (len(skill) > 0):
+    #   for i in skill:
+    #     resumeDict['skills'].append({'name': i})
+    print(name)
+    # print(json.dumps(resumeDict, indent=2))
     print('-----------------------------------------------')
 
-parseResume('resumes')
+parseResume('docx')

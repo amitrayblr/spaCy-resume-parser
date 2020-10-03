@@ -1,4 +1,14 @@
+.gitignore
 venv
 .vscode
 custom-ner
 resumes
+testparser
+doc
+docx
+bad_names
+pdfs
+no_email
+unsupportedtypes
+finalparser.py
+testparser.py

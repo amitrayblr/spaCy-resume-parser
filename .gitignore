@@ -3,7 +3,6 @@ venv
 .vscode
 custom-ner
 resumes
-testparser
 doc
 docx
 bad_names
